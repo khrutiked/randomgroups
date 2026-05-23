@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>วงล้อสุ่มออนไลน์ - Wheel of Groups</title>
+    <!-- โหลด Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- โหลดฟอนต์สารบัญ (Sarabun) จาก Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@100;200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- โหลดไลบรารีพลุกระดาษ Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <!-- โหลด Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* บังคับใช้ฟอนต์สารบัญในทุกเซกชัน */
+        body, button, textarea, input, select, span, h1, h2, h3, div {
+            font-family: 'Sarabun', sans-serif !important;
+        }
+        /* ซ่อน scrollbar ของ textarea แต่เลื่อนได้ปกติ */
+        textarea::-webkit-scrollbar {
+            width: 6px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 8px;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+        }
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.25);
+        }
+    </style>
+</head>
+<body class="bg-[#fcfbfc] text-slate-800 min-h-screen flex flex-col selection:bg-indigo-100 selection:text-indigo-900">
+
+    <!-- แถบเมนูด้านบน (Header Style Vibrant Minimal) -->
+    <header class="border-b border-slate-100 bg-white/95 backdrop-blur-md sticky top-0 z-40 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-50 p-2.5 rounded-xl border border-indigo-100/50 text-indigo-500">
+                    <i data-lucide="sparkles" class="w-5 h-5 animate-pulse"></i>
+                </div>
+                <div>
+                    <h1 class="text-base font-extrabold tracking-tight bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+                        วงล้อสุ่มออนไลน์
+                    </h1>
+                    <p class="text-[11px] text-slate-400 font-medium">สุ่มรายชื่อฟรี สีสันสดใส</p>
+                </div>
+            </div>
+            
+            <!-- การควบคุมด่วนและปุ่มฟังก์ชัน -->
+            <div class="flex items-center gap-2">
+                <button onclick="triggerQuickExample()" class="flex items-center gap-1.5 text-xs bg-slate-50 hover:bg-slate-100 text-slate-600 py-2.5 px-4 rounded-xl transition-all border border-slate-200/60 font-semibold shadow-sm">
+                    <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-indigo-500"></i>
+                    ใส่รายชื่อตัวอย่าง
+                </button>
+                <button onclick="toggleSound()" id="soundToggleBtn" class="flex items-center justify-center p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/60 text-slate-500 transition-colors shadow-sm">
+                    <i id="soundIcon" data-lucide="volume-2" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- พื้นที่แสดงผลและจัดการหลัก -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- ฝั่งซ้าย: วงล้อสุ่มรายชื่อ (7 Columns) -->
+        <section class="lg:col-span-7 flex flex-col items-center justify-center bg-white border border-slate-100 p-6 sm:p-10 rounded-3xl shadow-sm relative min-h-[450px] sm:min-h-[600px] overflow-hidden">
+            <!-- ตกแต่งพื้นหลังมินิมอลด้วยวงกลมสีจางๆ ด้านหลัง -->
+            <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-50/30 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-pink-50/30 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div class="relative w-full max-w-[420px] sm:max-w-[460px] aspect-square flex items-center justify-center">
+                <!-- ลูกศรชี้ผลรางวัลสไตล์คลีนสีอินเทรนด์ -->
+                <div class="absolute right-0 top-1/2 -translate-y-1/2 z-30 pointer-events-none flex items-center">
+                    <div class="w-0 h-0 border-t-[14px] border-t-transparent border-b-[14px] border-b-transparent border-r-[26px] border-r-indigo-600 transform rotate-180 mr-0.5 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.1)]"></div>
+                    <div class="w-2.5 h-7 bg-indigo-600 rounded-r-md"></div>
+                </div>
+
+                <!-- Canvas สำหรับวงล้อ -->
+                <canvas id="wheelCanvas" class="w-full h-full z-10 select-none cursor-pointer filter drop-shadow-[0_8px_24px_rgba(0,0,0,0.06)]" width="600" height="600"></canvas>
+                
+                <!-- หมุดแกนกลางวงล้อดีไซน์เรียบเท่สไตล์มินิมอลสีเข้มตัดสดใส -->
+                <div onclick="startSpin()" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 sm:w-18 sm:h-18 bg-white rounded-full border border-slate-200/60 flex items-center justify-center cursor-pointer shadow-lg z-20 hover:scale-105 active:scale-95 transition-all duration-150">
+                    <div class="w-11 h-11 sm:w-13 sm:h-13 bg-gradient-to-tr from-indigo-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-sm tracking-wider shadow-inner hover:brightness-105 transition-all">
+                        หมุน!
+                    </div>
+                </div>
+            </div>
+
+            <!-- ปุ่มดำเนินการหลักดีไซน์แบนเรียบแบบคลีนแต่อัดความสดใสเต็มพิกัด -->
+            <div class="mt-8 flex gap-3 justify-center w-full max-w-sm z-10">
+                <button id="spinButton" onclick="startSpin()" class="flex-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white font-semibold py-3.5 px-6 rounded-2xl shadow-md shadow-indigo-100 hover:shadow-lg hover:shadow-indigo-200 active:translate-y-px transition-all text-sm flex items-center justify-center gap-2">
+                    <i data-lucide="play" class="w-4 h-4 fill-white"></i>
+                    เริ่มหมุนวงล้อ
+                </button>
+                <button onclick="shuffleNames()" class="bg-white hover:bg-slate-50 text-slate-600 py-3.5 px-4.5 rounded-2xl transition-all border border-slate-200 flex items-center justify-center shadow-sm" title="สลับตำแหน่งรายชื่อ">
+                    <i data-lucide="shuffle" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- ฝั่งขวา: รายการควบคุมและจัดการรายชื่อ (5 Columns) -->
+        <section class="lg:col-span-5 flex flex-col gap-5 w-full">
+            
+            <!-- เมนูสลับแท็บแบบเรียบมินิมอล -->
+            <div class="bg-slate-100 p-1 rounded-2xl flex gap-1">
+                <button onclick="switchTab('names')" id="tab-names" class="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-white text-slate-800 shadow-sm border border-slate-200/20">
+                    <i data-lucide="align-left" class="w-3.5 h-3.5 text-indigo-500"></i>
+                    รายชื่อสุ่ม (<span id="countDisplay">0</span>)
+                </button>
+                <button onclick="switchTab('settings')" id="tab-settings" class="flex-1 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-800 transition-all flex items-center justify-center gap-1.5">
+                    <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
+                    ตั้งค่าวงล้อ
+                </button>
+                <button onclick="switchTab('history')" id="tab-history" class="flex-1 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-800 transition-all flex items-center justify-center gap-1.5">
+                    <i data-lucide="history" class="w-3.5 h-3.5"></i>
+                    ประวัติสุ่ม
+                </button>
+            </div>
+
+            <!-- กล่องคอนเทนต์แท็บ -->
+            <div class="bg-white border border-slate-100 p-6 rounded-3xl min-h-[410px] flex flex-col shadow-sm">
+                
+                <!-- แท็บที่ 1: จัดการรายชื่อ -->
+                <div id="content-names" class="flex-1 flex flex-col gap-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-medium text-slate-400">กรอกรายชื่อบรรทัดละ 1 ชื่อ</span>
+                        <button onclick="clearText()" class="text-xs text-rose-500 hover:text-rose-600 font-bold transition-colors flex items-center gap-1">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> ล้างทั้งหมด
+                        </button>
+                    </div>
+                    
+                    <div class="flex-1">
+                        <textarea id="namesTextarea" oninput="onInputChanged()" placeholder="พิมพ์รายชื่อเพื่อนำเข้าวงล้อ..." class="w-full h-72 bg-slate-50/50 border border-slate-200/80 rounded-2xl p-4 text-slate-700 placeholder-slate-400 focus:outline-none focus:border-indigo-400 focus:bg-white focus:ring-1 focus:ring-indigo-400 transition-all resize-none text-sm leading-relaxed"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="sortNames()" class="bg-white hover:bg-slate-50 text-slate-600 py-3 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border border-slate-200 shadow-sm">
+                            <i data-lucide="arrow-down-a-z" class="w-3.5 h-3.5 text-indigo-500"></i> เรียงชื่อ ก-ฮ
+                        </button>
+                        <button onclick="removeDuplicates()" class="bg-white hover:bg-slate-50 text-slate-600 py-3 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border border-slate-200 shadow-sm" title="ลบชื่อที่ซ้ำกันออก">
+                            <i data-lucide="copy-minus" class="w-3.5 h-3.5 text-indigo-500"></i> ลบชื่อซ้ำออก
+                        </button>
+                    </div>
+                </div>
+
+                <!-- แท็บที่ 2: ตั้งค่า -->
+                <div id="content-settings" class="hidden flex flex-col gap-5">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">ตัวช่วยหมุนและธีมสี</h3>
+                    
+                    <!-- เวลาหมุน -->
+                    <div class="flex flex-col gap-2">
+                        <div class="flex justify-between items-center">
+                            <label class="text-xs font-bold text-slate-600">เวลาสุ่มหมุนวงล้อ</label>
+                            <span id="durationVal" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">15 วินาที</span>
+                        </div>
+                        <input type="range" id="spinDuration" min="1" max="15" value="15" oninput="updateDurationValue(this.value)" class="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+                    </div>
+
+                    <!-- การเลือกธีมสีมินิมอลแต่สดใส -->
+                    <div class="flex flex-col gap-2 mt-2">
+                        <label class="text-xs font-bold text-slate-600">สไตล์เฉดสีของวงล้อ</label>
+                        <select id="themeSelector" onchange="changeTheme(this.value)" class="bg-white border border-slate-200 text-slate-700 rounded-xl p-3 focus:outline-none focus:border-indigo-400 text-xs shadow-sm font-semibold">
+                            <option value="vibrant_minimal">🌟 สดใสมินิมอล (Vibrant Minimal)</option>
+                            <option value="candy_pop">🍬 ลูกกวาดพาสเทล (Candy Pop)</option>
+                            <option value="electric_sunset">🌇 อาทิตย์อัสดงนีออน (Electric Sunset)</option>
+                            <option value="nordic_bright">🌿 นอร์ดิกสว่างสดใส (Nordic Bright)</option>
+                            <option value="classic_contrast">🌗 ขาวดำเทาสุดคลีน (Classic Contrast)</option>
+                        </select>
+                    </div>
+
+                    <!-- เปิด/ปิด เสียงแบบง่ายๆ -->
+                    <div class="flex flex-col gap-3.5 mt-2 border-t border-slate-100 pt-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-slate-600">เปิดเสียงเข็มขูดขณะหมุน</span>
+                                <span class="text-[10px] text-slate-400 font-medium">เสียงแก๊กเปลี่ยนช่องวงล้อ</span>
+                            </div>
+                            <input type="checkbox" id="tickSoundEnabled" checked class="w-4.5 h-4.5 rounded-lg border-slate-300 accent-indigo-500 cursor-pointer">
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-slate-600">เปิดเสียงดนตรีแสดงความยินดี</span>
+                                <span class="text-[10px] text-slate-400 font-medium">เสียงเมโลดี้ฉลองสั้นๆ เมื่อหมุนหยุด</span>
+                            </div>
+                            <input type="checkbox" id="victorySoundEnabled" checked class="w-4.5 h-4.5 rounded-lg border-slate-300 accent-indigo-500 cursor-pointer">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- แท็บที่ 3: ประวัติการสุ่ม -->
+                <div id="content-history" class="hidden flex flex-col gap-4 flex-1">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-slate-400">ประวัติจับสลากเลือก</span>
+                        <button onclick="clearHistory()" class="text-xs text-slate-400 hover:text-rose-500 transition-colors flex items-center gap-1 font-bold">
+                            <i data-lucide="eraser" class="w-3.5 h-3.5"></i> ล้างประวัติ
+                        </button>
+                    </div>
+                    
+                    <div id="historyList" class="flex-1 overflow-y-auto max-h-[290px] flex flex-col gap-2 pr-1">
+                        <!-- รายการประวัติผู้ชนะ -->
+                        <div id="emptyHistoryMsg" class="text-slate-400 text-center py-12 flex flex-col items-center justify-center gap-2">
+                            <i data-lucide="info" class="w-6 h-6 text-slate-300"></i>
+                            <span class="text-xs font-medium">ยังไม่มีประวัติการหมุนเลือกชื่อ</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ฟุตเตอร์เรียบง่ายสะอาดตา -->
+    <footer class="border-t border-slate-100 bg-white py-6 text-center text-xs text-slate-400 font-medium">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p>© 2026 วงล้อสุ่มรายชื่อ (ฉบับมินิมอลสีสันสดใส)</p>
+            <div class="flex items-center gap-4">
+                <span class="text-slate-400 flex items-center gap-1">
+                    <i data-lucide="shield-check" class="w-3.5 h-3.5 text-slate-300"></i> ทำงานบนเบราว์เซอร์อย่างปลอดภัย 100%
+                </span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- หน้าต่างผู้โชคดี (Winner Modal) แบบ Clean Minimalist Pop -->
+    <div id="winnerModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 transition-all duration-300">
+        <div class="bg-white border border-slate-100 p-8 rounded-3xl text-center max-w-sm w-full shadow-xl relative overflow-hidden animate-[scaleUp_0.3s_ease-out]">
+            
+            <!-- ไอคอนรางวัลเรียบเก๋ สดใส -->
+            <div class="mx-auto mb-4 bg-gradient-to-tr from-amber-400 via-orange-400 to-pink-500 p-3 rounded-2xl w-14 h-14 flex items-center justify-center shadow-md">
+                <i data-lucide="award" class="w-7 h-7 text-white"></i>
+            </div>
+            
+            <h2 class="text-xs font-extrabold tracking-widest text-indigo-500 uppercase mb-1">ยินดีด้วยกับผู้ชนะ!</h2>
+            <p class="text-xs text-slate-400 font-medium mb-5">รายชื่อที่หมุนสุ่มได้คือ</p>
+            
+            <!-- รายชื่อผู้โชคดีเด่นชัดสะอาดตา -->
+            <div class="bg-slate-50 border border-slate-100 py-4 px-6 rounded-2xl mb-6 shadow-inner">
+                <span id="winnerNameDisplay" class="text-2xl font-extrabold text-slate-800 break-words block">
+                    -
+                </span>
+            </div>
+            
+            <!-- การดำเนินการของผู้ชนะ -->
+            <div class="flex flex-col gap-2">
+                <button onclick="closeWinnerModal()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-xl transition-all text-xs shadow-sm">
+                    เสร็จสิ้น
+                </button>
+                <button onclick="removeWinnerAndClose()" class="w-full bg-white hover:bg-rose-50 text-rose-600 font-bold py-3 px-4 rounded-xl transition-all border border-slate-200 text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                    <i data-lucide="user-minus" class="w-3.5 h-3.5"></i> นำรายชื่อนี้ออกจากวงล้อ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- แอนิเมชันสำหรับ Pop-up Modal สากล -->
+    <style>
+        @keyframes scaleUp {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+    </style>
+
+    <!-- โค้ด JavaScript จัดการวงล้อและการสุ่ม -->
+    <script>
+        // เรียกใช้งานไอคอน Lucide
+        lucide.createIcons();
+
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const namesTextarea = document.getElementById('namesTextarea');
+        const countDisplay = document.getElementById('countDisplay');
+        const spinButton = document.getElementById('spinButton');
+        const winnerModal = document.getElementById('winnerModal');
+        const winnerNameDisplay = document.getElementById('winnerNameDisplay');
+        const historyList = document.getElementById('historyList');
+        const emptyHistoryMsg = document.getElementById('emptyHistoryMsg');
+
+        // คอลเลกชันเฉดสีสไตล์ Vibrant Minimal
+        const themes = {
+            vibrant_minimal: ['#FF6B6B', '#4ECDC4', '#FFD166', '#06D6A0', '#118AB2', '#8338EC', '#FF006E', '#3A86C8'],
+            candy_pop: ['#FF9FF3', '#FEF08A', '#A3E635', '#818CF8', '#F472B6', '#22D3EE', '#FB923C', '#F87171'],
+            electric_sunset: ['#FF4D6D', '#FF758F', '#FF85A1', '#FF94B8', '#FFB3C6', '#80ED99', '#57CC99', '#38A3A5'],
+            nordic_bright: ['#5E81AC', '#81A1C1', '#88C0D0', '#8FBCBB', '#A3BE8C', '#EBCB8B', '#D08770', '#BF616A'],
+            classic_contrast: ['#1e293b', '#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1', '#e2e8f0', '#f1f5f9']
+        };
+
+        let currentTheme = 'vibrant_minimal';
+        let names = [];
+        let spinHistory = [];
+        let startAngle = 0;
+        let isSpinning = false;
+        let lastWinner = "";
+        let audioCtx = null;
+        let globalSoundOn = true;
+
+        // ตัวอย่างข้อมูลรายชื่อสลากไทย
+        const sampleNames = [
+            "กลุ่ม 1",
+            "กลุ่ม 2",
+            "กลุ่ม 3",
+            "กลุ่ม 4",
+            "กลุ่ม 5",
+            "กลุ่ม 6",
+            "กลุ่ม 7",
+            "กลุ่ม 8",
+            "กลุ่ม 9",
+            "กลุ่ม 10",
+            "กลุ่ม 11",
+            "กลุ่ม 12",
+            "กลุ่ม 13",
+            "กลุ่ม 14",
+            "กลุ่ม 15",
+            "กลุ่ม 16",
+            "กลุ่ม 17",
+            "กลุ่ม 18",
+            "กลุ่ม 19",
+            "กลุ่ม 20"
+        ];
+
+        // เติมข้อมูลครั้งแรกและรีเซ็ตการนับคำนวณ
+        namesTextarea.value = sampleNames.join('\n');
+        updateNamesArray();
+
+        // เล่นเสียงคูดสลักวงกลมจำลองเข็มด้วย Web Audio API (ไม่ต้องง้อเน็ต)
+        function playTickSound() {
+            if (!globalSoundOn || !document.getElementById('tickSoundEnabled').checked) return;
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(450, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.04);
+                
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.05);
+            } catch (e) {
+                console.error("Audio Web API Error:", e);
+            }
+        }
+
+        // เล่นเพลงดนตรีสังเคราะห์อบอุ่นมินิมอลเมื่อชนะ
+        function playVictorySound() {
+            if (!globalSoundOn || !document.getElementById('victorySoundEnabled').checked) return;
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                const now = audioCtx.currentTime;
+                // โน้ตเพลงสดใส 3 โน้ต
+                const notes = [329.63, 392.00, 523.25]; // E4, G4, C5
+                notes.forEach((freq, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.1);
+                    
+                    gain.gain.setValueAtTime(0.12, now + i * 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.2);
+                    
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + i * 0.1);
+                    osc.stop(now + i * 0.1 + 0.25);
+                });
+            } catch (e) {
+                console.error("Audio Web API Error:", e);
+            }
+        }
+
+        // คืนค่ารายการสีของธีมปัจจุบัน
+        function getColors() {
+            return themes[currentTheme] || themes.vibrant_minimal;
+        }
+
+        // การสลับเปิด/ปิด เสียง
+        function toggleSound() {
+            globalSoundOn = !globalSoundOn;
+            const soundIcon = document.getElementById('soundIcon');
+            const btn = document.getElementById('soundToggleBtn');
+            if (globalSoundOn) {
+                soundIcon.setAttribute('data-lucide', 'volume-2');
+                btn.className = "flex items-center justify-center p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/60 text-slate-500 transition-colors shadow-sm";
+            } else {
+                soundIcon.setAttribute('data-lucide', 'volume-x');
+                btn.className = "flex items-center justify-center p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/60 text-rose-500 transition-colors shadow-sm";
+            }
+            lucide.createIcons();
+            
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // ประมวลรายชื่อบรรทัดต่อบรรทัด
+        function updateNamesArray() {
+            names = namesTextarea.value
+                .split('\n')
+                .map(n => n.trim())
+                .filter(n => n.length > 0);
+            
+            countDisplay.innerText = names.length;
+            drawWheel();
+        }
+
+        function onInputChanged() {
+            updateNamesArray();
+        }
+
+        function clearText() {
+            namesTextarea.value = "";
+            updateNamesArray();
+        }
+
+        function shuffleNames() {
+            if (names.length <= 1) return;
+            for (let i = names.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [names[i], names[j]] = [names[j], names[i]];
+            }
+            namesTextarea.value = names.join('\n');
+            updateNamesArray();
+        }
+
+        function sortNames() {
+            if (names.length <= 1) return;
+            names.sort((a, b) => a.localeCompare(b, 'th'));
+            namesTextarea.value = names.join('\n');
+            updateNamesArray();
+        }
+
+        function removeDuplicates() {
+            if (names.length <= 1) return;
+            const unique = [...new Set(names)];
+            namesTextarea.value = unique.join('\n');
+            updateNamesArray();
+        }
+
+        function changeTheme(themeName) {
+            currentTheme = themeName;
+            drawWheel();
+        }
+
+        function updateDurationValue(val) {
+            document.getElementById('durationVal').innerText = val + " วินาที";
+        }
+
+        function triggerQuickExample() {
+            namesTextarea.value = sampleNames.join('\n');
+            updateNamesArray();
+        }
+
+        // ฟังก์ชันช่วยตรวจสอบว่าควรใช้สีตัวอักษรเป็นสีขาวหรือสีเข้ม
+        function getContrastColor(hexColor) {
+            // ลบเครื่องหมาย # ถ้ามี
+            const hex = hexColor.replace('#', '');
+            const r = parseInt(hex.substring(0, 2), 16);
+            const g = parseInt(hex.substring(2, 4), 16);
+            const b = parseInt(hex.substring(4, 6), 16);
+            // คำนวณความสว่าง (YIQ)
+            const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+            return (yiq >= 148) ? '#2d3748' : '#ffffff';
+        }
+
+        // วาดวงล้อมินิมอลสดใส
+        function drawWheel() {
+            const size = canvas.width;
+            const center = size / 2;
+            const radius = center - 12;
+
+            ctx.clearRect(0, 0, size, size);
+
+            if (names.length === 0) {
+                // หากไม่มีรายชื่อให้วาดวงล้อเปล่าสีเทาสลัวเรียบหรู
+                ctx.beginPath();
+                ctx.arc(center, center, radius, 0, 2 * Math.PI);
+                ctx.fillStyle = '#f8fafc';
+                ctx.fill();
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = '#e2e8f0';
+                ctx.stroke();
+
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '500 20px Sarabun';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('โปรดเพิ่มรายชื่อเพื่อเริ่มสร้างวงล้อ', center, center);
+                return;
+            }
+
+            const arcAngle = (2 * Math.PI) / names.length;
+            const themeColors = getColors();
+
+            for (let i = 0; i < names.length; i++) {
+                const angle = startAngle + i * arcAngle;
+                const baseColor = themeColors[i % themeColors.length];
+                
+                ctx.fillStyle = baseColor;
+                
+                // วาดพื้นที่แฉกวงล้อ
+                ctx.beginPath();
+                ctx.moveTo(center, center);
+                ctx.arc(center, center, radius, angle, angle + arcAngle);
+                ctx.lineTo(center, center);
+                ctx.fill();
+
+                // วาดเส้นแบ่งขอบด้วยสีขาวเพื่อความคลีนและตัดเฉดสีเด่น
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = names.length > 20 ? 1 : 1.5;
+                ctx.stroke();
+
+                // ปรับคำนวณสลับสีตัวอักษรอัตโนมัติตามธีม เพื่อรักษามาตรฐานความมินิมอลและอ่านง่าย
+                ctx.save();
+                ctx.fillStyle = getContrastColor(baseColor);
+                
+                let fontSize = 30;
+                if (names.length > 30) fontSize = 10;
+                else if (names.length > 20) fontSize = 16;
+                else if (names.length > 10) fontSize = 20;
+                
+                ctx.font = `600 ${fontSize}px Sarabun`;
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                
+                ctx.translate(center, center);
+                ctx.rotate(angle + arcAngle / 2);
+                
+                let text = names[i];
+                const maxTextWidth = radius * 0.72;
+                if (ctx.measureText(text).width > maxTextWidth) {
+                    while (ctx.measureText(text + '...').width > maxTextWidth && text.length > 0) {
+                        text = text.slice(0, -1);
+                    }
+                    text += '...';
+                }
+
+                ctx.fillText(text, radius - 20, 0);
+                ctx.restore();
+            }
+
+            // ขอบวงกลมด้านนอกสไตล์คลีน
+            ctx.beginPath();
+            ctx.arc(center, center, radius, 0, 2 * Math.PI);
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.stroke();
+        }
+
+        // ทำการหมุนวงล้อ
+        function startSpin() {
+            if (isSpinning) return;
+            if (names.length === 0) {
+                return;
+            }
+
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            isSpinning = true;
+            spinButton.disabled = true;
+            spinButton.classList.add('opacity-40');
+
+            const spinDurationSetting = parseFloat(document.getElementById('spinDuration').value) * 1000;
+            const startTime = performance.now();
+            
+            const baseSpins = 6; 
+            const extraAngle = Math.random() * (2 * Math.PI);
+            const targetRotation = (baseSpins * 2 * Math.PI) + extraAngle;
+
+            const initialAngle = startAngle;
+            let lastTickIndex = -1;
+
+            function animate(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / spinDurationSetting, 1);
+                
+                // ใช้ Quintic Ease Out มินิมอลสมูทที่สุด
+                const easeOutQuad = 1 - Math.pow(1 - progress, 5);
+                const currentRotation = initialAngle + (targetRotation * easeOutQuad);
+                
+                startAngle = currentRotation % (2 * Math.PI);
+                drawWheel();
+
+                const arcAngle = (2 * Math.PI) / names.length;
+                const currentPointerOffset = (2 * Math.PI - (startAngle % (2 * Math.PI))) % (2 * Math.PI);
+                const currentTickIndex = Math.floor(currentPointerOffset / arcAngle);
+
+                if (currentTickIndex !== lastTickIndex && progress < 0.98) {
+                    playTickSound();
+                    lastTickIndex = currentTickIndex;
+                }
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    finishSpin();
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        function finishSpin() {
+            isSpinning = false;
+            spinButton.disabled = false;
+            spinButton.classList.remove('opacity-40');
+
+            const arcAngle = (2 * Math.PI) / names.length;
+            const pointerAngle = (2 * Math.PI - (startAngle % (2 * Math.PI))) % (2 * Math.PI);
+            const winnerIndex = Math.floor(pointerAngle / arcAngle);
+            const winner = names[winnerIndex];
+            
+            lastWinner = winner;
+
+            addWinnerToHistory(winner);
+
+            // ฉลองด้วยพลุกระดาษสีสดใสรอบหน้าจอ
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+
+            playVictorySound();
+
+            winnerNameDisplay.innerText = winner;
+            winnerModal.classList.remove('hidden');
+            winnerModal.classList.add('flex');
+        }
+
+        function closeWinnerModal() {
+            winnerModal.classList.add('hidden');
+            winnerModal.classList.remove('flex');
+        }
+
+        function removeWinnerAndClose() {
+            if (lastWinner) {
+                const winnerIndex = names.indexOf(lastWinner);
+                if (winnerIndex > -1) {
+                    names.splice(winnerIndex, 1);
+                    namesTextarea.value = names.join('\n');
+                    updateNamesArray();
+                }
+            }
+            closeWinnerModal();
+        }
+
+        function addWinnerToHistory(winnerName) {
+            spinHistory.unshift({
+                name: winnerName,
+                time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+            });
+            renderHistory();
+        }
+
+        function clearHistory() {
+            spinHistory = [];
+            renderHistory();
+        }
+
+        function renderHistory() {
+            if (spinHistory.length === 0) {
+                emptyHistoryMsg.classList.remove('hidden');
+                historyList.querySelectorAll('.history-item').forEach(e => e.remove());
+                return;
+            }
+
+            emptyHistoryMsg.classList.add('hidden');
+            historyList.querySelectorAll('.history-item').forEach(e => e.remove());
+
+            spinHistory.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "history-item bg-slate-50 border border-slate-100 p-3 rounded-xl flex justify-between items-center text-xs hover:border-slate-200 transition-colors animate-[scaleUp_0.15s_ease] gap-4 shadow-sm";
+                div.innerHTML = `
+                    <div class="flex items-center gap-2 overflow-hidden">
+                        <span class="w-2 h-2 rounded-full bg-indigo-500 shrink-0"></span>
+                        <span class="font-bold text-slate-700 truncate">${item.name}</span>
+                    </div>
+                    <span class="text-[10px] text-indigo-500 shrink-0 font-mono bg-indigo-50 px-2 py-0.5 rounded-lg font-bold">${item.time}</span>
+                `;
+                historyList.appendChild(div);
+            });
+        }
+
+        // จัดการเปลี่ยนสลับแท็บเมนู
+        function switchTab(tabId) {
+            const tabs = ['names', 'settings', 'history'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                const content = document.getElementById(`content-${t}`);
+                
+                if (t === tabId) {
+                    btn.className = "flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-white text-slate-800 shadow-sm border border-slate-200/20";
+                    content.classList.remove('hidden');
+                } else {
+                    btn.className = "flex-1 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-800 transition-all flex items-center justify-center gap-1.5";
+                    content.classList.add('hidden');
+                }
+            });
+        }
+
+        window.addEventListener('resize', () => {
+            drawWheel();
+        });
+    </script>
+</body>
+</html>
